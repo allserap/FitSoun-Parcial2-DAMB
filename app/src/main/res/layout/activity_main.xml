@@ -7,7 +7,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:padding="15dp">
 
         <EditText
             android:id="@+id/etMinutos"
@@ -23,7 +23,6 @@
             android:id="@+id/btnCardio"
             android:layout_width="126dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
             android:backgroundTint="#A2D2FF"
             android:text="@string/cardio"
             android:textColor="@color/white"
@@ -33,8 +32,8 @@
             android:id="@+id/btnFuerza"
             android:layout_width="126dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:backgroundTint="#D8BFD8"
             android:text="@string/fuerza"
             android:textColor="@color/white"
@@ -44,7 +43,6 @@
             android:id="@+id/btnFlexibilidad"
             android:layout_width="126dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
             android:backgroundTint="#FF6B6B"
             android:text="@string/flexibilidad"
             android:textColor="@color/white"
@@ -54,27 +52,31 @@
         <Spinner
             android:id="@+id/spinnerCharts"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="35dp" />
         <FrameLayout
             android:id="@+id/chartContainer"
             android:layout_width="match_parent"
             android:layout_height="300dp"
+            android:padding="10dp"
             android:background="#EEEEEE">
             <com.github.mikephil.charting.charts.BarChart
                 android:id="@+id/barChart"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:padding="8dp"/>
 
             <com.github.mikephil.charting.charts.PieChart
                 android:id="@+id/pieChart"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
+                android:layout_height="match_parent"
+                android:padding="8dp"
                 android:visibility="gone" />
 
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/lineChart"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
+                android:layout_height="match_parent"
+                android:padding="8dp"
                 android:visibility="gone" />
         </FrameLayout>
 
@@ -83,7 +85,7 @@
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="200dp"
-            android:layout_marginTop="8dp"/>
+            android:layout_marginTop="16dp"/>
 
     </LinearLayout>
 </ScrollView>
