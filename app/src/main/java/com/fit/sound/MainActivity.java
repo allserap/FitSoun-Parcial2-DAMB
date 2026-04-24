@@ -49,9 +49,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private int cardioMin = 0;
     private int fuerzaMin = 0;
     private int flexibilidadMin = 0;
-    private List<Integer> histCardio = new ArrayList<>();
-    private List<Integer> histFuerza = new ArrayList<>();
-    private List<Integer> histFlex = new ArrayList<>();
+    private ArrayList<Integer> historialTotales = new ArrayList<>();
 
     private EditText etMinutos;
     private Spinner spinnerCharts;
@@ -93,11 +91,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //HU5
         if (savedInstanceState != null) {
+            // Restaurar los tres contadores
             cardioMin = savedInstanceState.getInt("cardio");
             fuerzaMin = savedInstanceState.getInt("fuerza");
             flexibilidadMin = savedInstanceState.getInt("flex");
+
+            // Restaurar la posición del spinner
             int savedPos = savedInstanceState.getInt("spinnerPos");
             spinnerCharts.setSelection(savedPos);
+
+            // Restaurar la lista del historial
+            historialTotales = savedInstanceState.getIntegerArrayList("historial");
+
+            if (historialTotales == null) {
+                historialTotales = new ArrayList<>();
+            }
         }
 
         configurarBotones();
@@ -129,45 +137,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void setupLineChart() {
-        List<Entry> entriesCardio = new ArrayList<>();
-        List<Entry> entriesFuerza = new ArrayList<>();
-        List<Entry> entriesFlex = new ArrayList<>();
+        List<Entry> entries = new ArrayList<>();
 
-        for (int i = 0; i < histCardio.size(); i++) {
-            entriesCardio.add(new Entry(i, histCardio.get(i)));
-            entriesFuerza.add(new Entry(i, histFuerza.get(i)));
-            entriesFlex.add(new Entry(i, histFlex.get(i)));
+        // HU2: Graficar la evolución de los totales guardados
+        for (int i = 0; i < historialTotales.size(); i++) {
+            entries.add(new Entry(i, historialTotales.get(i)));
         }
 
-        LineDataSet setCardio = new LineDataSet(entriesCardio, "Cardio");
-        configurarEstiloLinea(setCardio, COLOR_CARDIO);
-        LineDataSet setFuerza = new LineDataSet(entriesFuerza, "Fuerza");
-        configurarEstiloLinea(setFuerza, COLOR_FUERZA);
-        LineDataSet setFlex = new LineDataSet(entriesFlex, "Flex");
-        configurarEstiloLinea(setFlex, COLOR_FLEX);
+        LineDataSet dataSet = new LineDataSet(entries, "Evolución Total (Últimos 5)");
+        dataSet.setColor(Color.BLUE);
+        dataSet.setCircleColor(Color.GRAY);
+        dataSet.setLineWidth(2f);
 
-        LineData lineData = new LineData(setCardio, setFuerza, setFlex);
-        lineChart.setData(lineData);
-
-        // Eje X
-        XAxis xAxis = lineChart.getXAxis();
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setGranularity(1f);
-
-        lineChart.getDescription().setEnabled(false);
+        lineChart.setData(new LineData(dataSet));
+        lineChart.getXAxis().setGranularity(1f);
         lineChart.invalidate();
     }
 
-    private void configurarEstiloLinea(LineDataSet set, int color) {
-        set.setColor(color);
-        set.setCircleColor(color);
-        set.setLineWidth(3f);
-        set.setCircleRadius(4f);
-        set.setDrawValues(false);
-        set.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-    }
-
     private void setupPieChart() {
+        int total = cardioMin + fuerzaMin + flexibilidadMin;
+
+        if (total == 0) {
+            pieChart.clear();
+            pieChart.setNoDataText("No hay datos registrados aún");
+            pieChart.invalidate();
+            return;
+        }
+
         List<PieEntry> entries = new ArrayList<>();
         entries.add(new PieEntry(cardioMin, "Cardio"));
         entries.add(new PieEntry(fuerzaMin, "Fuerza"));
@@ -176,9 +172,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         PieDataSet dataSet = new PieDataSet(entries, "");
         dataSet.setColors(COLOR_CARDIO, COLOR_FUERZA, COLOR_FLEX);
         dataSet.setValueTextSize(12f);
+        dataSet.setValueTextColor(Color.BLACK);
 
-        pieChart.setData(new PieData(dataSet));
+        PieData data = new PieData(dataSet);
+
+        data.setValueFormatter(new com.github.mikephil.charting.formatter.PercentFormatter(pieChart));
+        pieChart.setData(data);
+        pieChart.setUsePercentValues(true);
         pieChart.getDescription().setEnabled(false);
+        pieChart.setEntryLabelColor(Color.BLACK);
+
+        pieChart.animateY(1000);
         pieChart.invalidate();
     }
 
@@ -238,16 +242,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 flexibilidadMin += valor;
             }
 
-            histCardio.add(cardioMin);
-            histFuerza.add(fuerzaMin);
-            histFlex.add(flexibilidadMin);
-
             // HU2
-            // Limitar historial a los últimos 10
-            if (histCardio.size() > 10) {
-                histCardio.remove(0);
-                histFuerza.remove(0);
-                histFlex.remove(0);
+            // Limitar historial a los últimos 5
+            int totalActual = cardioMin + fuerzaMin + flexibilidadMin;
+            historialTotales.add(totalActual);
+            if (historialTotales.size() > 5) {
+                historialTotales.remove(0);
             }
 
             etMinutos.setText("");
@@ -269,6 +269,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         outState.putInt("fuerza", fuerzaMin);
         outState.putInt("flex", flexibilidadMin);
         outState.putInt("spinnerPos", spinnerCharts.getSelectedItemPosition());
+        outState.putIntegerArrayList("historial", historialTotales);
     }
 
     //HU4
