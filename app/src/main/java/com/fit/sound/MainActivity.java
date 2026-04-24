@@ -1,6 +1,7 @@
 package com.fit.sound;
 
 import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -31,11 +32,19 @@ import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.OnMapReadyCallback;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+
+//Implementación de OnMapReadyCallBack para manejar GoogleMaps
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private int cardioMin = 0;
     private int fuerzaMin = 0;
@@ -53,10 +62,23 @@ public class MainActivity extends AppCompatActivity {
     private final int COLOR_FUERZA = Color.parseColor("#D8BFD8");
     private final int COLOR_FLEX   = Color.parseColor("#FF6B6B");
 
+
+    //Declaración de objeto de API de Google Maps (HU4)
+    private GoogleMap mapa;
+
+    //Declaración de objeto MediaPlayer(HU3/6)
+    private MediaPlayer mediaPlayer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //Busqueda del fragmento definido en el XML (HU4)
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        //Carga del mapa en segundo plano
+         mapFragment.getMapAsync(this);
+
 
         etMinutos = findViewById(R.id.etMinutos);
         spinnerCharts = findViewById(R.id.spinnerCharts);
@@ -81,6 +103,23 @@ public class MainActivity extends AppCompatActivity {
         configurarBotones();
         configurarSpinner();
         actualizarGraficos();
+
+
+        //HU3
+        // Inicializar MediaPlayer con el audio de res/raw/success.mp3
+         mediaPlayer = MediaPlayer.create(this, R.raw.success);
+         if (mediaPlayer == null) {
+            Toast.makeText(this, "Error: no se pudo cargar el audio", Toast.LENGTH_SHORT).show();
+            findViewById(R.id.btnCardio).setEnabled(false);
+            findViewById(R.id.btnFlexibilidad).setEnabled(false);
+            findViewById(R.id.btnFuerza).setEnabled(false);
+            return;
+         }
+        // Configurar listener para cuando termina la reproducción
+        mediaPlayer.setOnCompletionListener(mp -> {
+            mediaPlayer.seekTo(0);
+         });
+
     }
 
     private void actualizarGraficos() {
@@ -213,6 +252,8 @@ public class MainActivity extends AppCompatActivity {
 
             etMinutos.setText("");
             actualizarGraficos();
+
+            reproducirSonido(); //HU3
         };
 
         findViewById(R.id.btnCardio).setOnClickListener(listener);
@@ -229,4 +270,47 @@ public class MainActivity extends AppCompatActivity {
         outState.putInt("flex", flexibilidadMin);
         outState.putInt("spinnerPos", spinnerCharts.getSelectedItemPosition());
     }
+
+    //HU4
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        mapa = googleMap;
+
+         //Controles de zoom
+         mapa.getUiSettings().setZoomControlsEnabled(true);
+
+         //Iniciar en Plaza Salvador del Mundo con coordenadas
+         LatLng salvadorDelMundo = new LatLng(13.70131880212184, -89.2243357518757);
+
+         //Centrar cámara con zoom 12 en
+         mapa.moveCamera(CameraUpdateFactory.newLatLngZoom(salvadorDelMundo, 12f));
+
+         //Marcador en Parque Bicentenario
+         mapa.addMarker(new MarkerOptions().position(salvadorDelMundo).title("Salvador del Mundo"));
+    }
+
+    //HU3/6
+    //Ejecuta el sonido de éxito
+    private void reproducirSonido() {
+         if (mediaPlayer != null) {
+             if (mediaPlayer.isPlaying()) {
+             mediaPlayer.seekTo(0);
+             }
+            mediaPlayer.start();
+         }
+    }
+
+    //Ejecución cuando se cierra la activity
+    @Override
+    protected void onDestroy() {
+         super.onDestroy();
+         if (mediaPlayer != null) {
+             if (mediaPlayer.isPlaying()) {
+             mediaPlayer.stop();
+             }
+             mediaPlayer.release();
+             mediaPlayer = null;
+         }
+    }
+
 }
